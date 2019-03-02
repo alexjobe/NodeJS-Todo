@@ -8,7 +8,12 @@ $(document).ready(function(){
         }
     });
 
-    $('.list').on('click', 'span', function(){ // Event listener added to ul, which exists on page load
+    $('.list').on('click', 'li', function(){ // Event listener added to ul, which exists on page load
+        updateTodo($(this));
+    });
+
+    $('.list').on('click', 'span', function(event){
+        event.stopPropagation(); // If user clicks on span, do not trigger click on li
         removeTodo($(this).parent());
     });
 });
@@ -22,7 +27,8 @@ function addTodos(todos) {
 
 function addTodo(todo) {
     var newTodo = $('<li class="task">' + todo.name + '<span>X</span></li>');
-    newTodo.data('id', todo._id); // jQuery data attribute
+    newTodo.data('id', todo._id); // jQuery data attribute, does not show up in html
+    newTodo.data('completed', todo.completed);
     if(todo.completed){ newTodo.addClass("done"); };
     $('.list').append(newTodo);
 }
@@ -52,5 +58,21 @@ function removeTodo(todo) {
     })
     .catch(function(err){
         console.log(err);
+    });
+}
+
+function updateTodo(todo) {
+    var updateUrl = '/api/todos/' + todo.data('id');
+    var isDone = !todo.data('completed');
+    updateData = {completed: isDone}
+
+    $.ajax({
+        method: 'PUT',
+        url: updateUrl,
+        data: updateData
+    })
+    .then(function(updatedTodo){
+        todo.toggleClass("done");
+        todo.data('completed', isDone); // Update data attribute
     });
 }
